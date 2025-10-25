@@ -26,23 +26,24 @@ function Payment() {
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [clientSecret, setClientSecret] = useState("");
+  const [interestCategories, setInterestCategories] = useState([]);
+  const [selectedInterests, setSelectedInterests] = useState([]);
+  const [personalizedPartners, setPersonalizedPartners] = useState([]);
+  const [showInterestSelection, setShowInterestSelection] = useState(false);
   const stripe = useStripe();
   const elements = useElements();
 
-  // Debug: Test backend connection
+  // Load interest categories
   useEffect(() => {
-    const testBackendConnection = async () => {
+    const loadInterests = async () => {
       try {
-        console.log("🔍 Testing backend connection...");
-        const response = await axiosInstance.get("/");
-        console.log("✅ Backend is reachable:", response.data);
+        const response = await axiosInstance.get("/interests");
+        setInterestCategories(response.data.categories);
       } catch (error) {
-        console.error("❌ Backend connection failed:", error);
-        setCardError("Cannot connect to payment server. Please try again later.");
+        console.log("Could not load interests:", error);
       }
     };
-    
-    testBackendConnection();
+    loadInterests();
   }, []);
 
   // Create payment intent when component loads
@@ -54,25 +55,20 @@ function Payment() {
 
   const createPaymentIntent = async () => {
     try {
-      console.log("🔄 Step 1: Creating payment intent for amount:", total * 100);
+      console.log("🔄 Creating payment intent for amount:", total * 100);
 
-      // Use your actual backend endpoint
       const response = await axiosInstance({
         method: "POST",
         url: `/payment/create?total=${total * 100}`,
       });
 
-      console.log("✅ Step 2: Payment intent response:", response.data);
-
       const clientSecret = response.data.client_secret;
-      const paymentIntentId = response.data.paymentIntentId;
-
       if (!clientSecret) {
         throw new Error("No client secret received from backend");
       }
 
       setClientSecret(clientSecret);
-      console.log("✅ Step 3: Payment intent created:", paymentIntentId);
+      console.log("✅ Payment intent created");
       
     } catch (error) {
       console.error("❌ Error creating payment intent:", error);
@@ -80,17 +76,43 @@ function Payment() {
     }
   };
 
+  const handleInterestToggle = (interestId) => {
+    setSelectedInterests(prev => {
+      if (prev.includes(interestId)) {
+        return prev.filter(id => id !== interestId);
+      } else if (prev.length < 2) { // Limit to 2 interests
+        return [...prev, interestId];
+      }
+      return prev;
+    });
+  };
+
+  const handleInterestSubmission = async () => {
+    if (selectedInterests.length === 0) {
+      setCardError("Please select at least one interest to get personalized offers!");
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.post("/partnerships/interests", {
+        interests: selectedInterests
+      });
+      
+      setPersonalizedPartners(response.data.partners);
+      setShowInterestSelection(false);
+      console.log("✅ Personalized partners loaded:", response.data.partners.length);
+    } catch (error) {
+      console.error("Error loading partners:", error);
+    }
+  };
+
   const handleChange = (e) => {
-    console.log("💳 Card element change:", e);
     e?.error?.message ? setCardError(e?.error?.message) : setCardError("");
   };
 
   const handlePayment = async (e) => {
     e.preventDefault();
-    console.log("🔄 Payment process started");
-    
     if (!stripe || !elements || !clientSecret) {
-      console.log("❌ Stripe not ready:", { stripe: !!stripe, elements: !!elements, clientSecret: !!clientSecret });
       setCardError("Payment system not ready. Please wait...");
       return;
     }
@@ -99,9 +121,6 @@ function Payment() {
     setCardError(null);
 
     try {
-      console.log("✅ Step 4: Processing REAL Stripe payment...");
-
-      // REAL STRIPE PAYMENT CONFIRMATION
       const { paymentIntent, error } = await stripe.confirmCardPayment(
         clientSecret,
         {
@@ -119,11 +138,6 @@ function Payment() {
         }
       );
 
-      console.log("✅ Step 5: Stripe confirmation result:", {
-        paymentIntent,
-        error,
-      });
-
       if (error) {
         console.error("❌ Stripe payment error:", error);
         setCardError(error.message);
@@ -132,27 +146,21 @@ function Payment() {
       }
 
       if (paymentIntent.status === "succeeded") {
-        console.log("🎉 Step 6: REAL Stripe payment succeeded:", paymentIntent);
+        console.log("🎉 Payment succeeded!");
         
         // Save order to Firestore
         await saveOrderToFirestore(paymentIntent);
-
+        
         setSuccess(true);
         setCardError(null);
-
-        // Clear basket
-        dispatch({
-          type: Type.EMPTY_BASKET,
-        });
-
-        // Redirect to orders page after 2 seconds
+        
+        // Show interest selection after payment
         setTimeout(() => {
-          window.location.href = "/orders";
-        }, 2000);
+          setShowInterestSelection(true);
+        }, 1000);
       }
     } catch (error) {
       console.error("❌ Payment process error:", error);
-      console.error("Error details:", error.response?.data || error.message);
       setCardError(error.message || "Payment failed. Please try again.");
     } finally {
       setProcessing(false);
@@ -161,9 +169,7 @@ function Payment() {
 
   const saveOrderToFirestore = async (paymentIntent) => {
     try {
-      if (!user) {
-        throw new Error("No user logged in");
-      }
+      if (!user) return;
 
       const orderData = {
         basket: basket,
@@ -176,17 +182,99 @@ function Payment() {
           email: user.email,
           address: "Addis Ababa, Ethiopia",
         },
+        selected_interests: selectedInterests, // Save user interests
+        personalized_partners: personalizedPartners.map(p => p.id) // Save partner IDs
       };
 
       const orderRef = doc(collection(db, "users", user.uid, "orders"));
       await setDoc(orderRef, orderData);
 
-      console.log("✅ Order saved to Firestore with ID:", orderRef.id);
+      console.log("✅ Order saved to Firestore");
     } catch (error) {
       console.error("❌ Error saving order to Firestore:", error);
-      throw error;
     }
   };
+
+  // Interest Selection Component
+  const InterestSelection = () => (
+    <div className={classes.interest_selection}>
+      <div className={classes.interest_header}>
+        <h3>🎁 Choose Your Interests</h3>
+        <p>Select up to 2 categories to get personalized discount links from Ethiopian women entrepreneurs!</p>
+      </div>
+      
+      <div className={classes.interest_grid}>
+        {interestCategories.map(category => (
+          <div
+            key={category.id}
+            className={`${classes.interest_card} ${
+              selectedInterests.includes(category.id) ? classes.selected : ''
+            }`}
+            onClick={() => handleInterestToggle(category.id)}
+          >
+            <div className={classes.interest_icon}>{category.icon}</div>
+            <div className={classes.interest_name}>{category.name}</div>
+            {selectedInterests.includes(category.id) && (
+              <div className={classes.selected_check}>✓</div>
+            )}
+          </div>
+        ))}
+      </div>
+      
+      <div className={classes.interest_footer}>
+        <p>Selected: {selectedInterests.length}/2</p>
+        <button 
+          onClick={handleInterestSubmission}
+          disabled={selectedInterests.length === 0}
+          className={classes.interest_button}
+        >
+          Get My Personalized Offers
+        </button>
+      </div>
+    </div>
+  );
+
+  // Personalized Partners Component
+  const PersonalizedPartners = () => (
+    <div className={classes.personalized_partners}>
+      <div className={classes.partners_header}>
+        <h3>✨ Your Personalized Offers!</h3>
+        <p>Based on your interests, here are special discount links just for you:</p>
+      </div>
+      
+      <div className={classes.partners_grid}>
+        {personalizedPartners.map(partner => (
+          <div key={partner.id} className={classes.partner_card}>
+            <h4>{partner.name}</h4>
+            <p className={classes.partner_description}>{partner.description}</p>
+            <div className={classes.discount_badge}>{partner.discount} OFF</div>
+            <div className={classes.partner_code}>
+              Use code: <strong>{partner.code}</strong>
+            </div>
+            <a 
+              href={partner.website} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={classes.partner_link}
+            >
+              🔗 Visit {partner.name}
+            </a>
+          </div>
+        ))}
+      </div>
+      
+      <div className={classes.community_message}>
+        <p>🌟 <strong>Thank you for supporting Ethiopian women entrepreneurs!</strong></p>
+        <p>Your purchase helps build a collaborative business network.</p>
+        <button 
+          onClick={() => window.location.href = "/orders"}
+          className={classes.continue_button}
+        >
+          Continue to Orders
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <Layout>
@@ -195,15 +283,10 @@ function Payment() {
       </div>
 
       <section className={classes.payment}>
-        {/* Test Card Instructions */}
-        <div className={classes.test_notice}>
-          <h4>💳 Real Stripe Test Payment</h4>
-          <p>This is a <strong>REAL Stripe payment</strong> in test mode.</p>
-          <p>Use test card: <strong>4242 4242 4242 4242</strong></p>
-          <p>Exp: 12/34 | CVC: 123 | ZIP: 12345</p>
-          <p style={{fontSize: '12px', color: '#666', marginTop: '10px'}}>
-            Payment will appear in your Stripe dashboard (test mode).
-          </p>
+        {/* Collaborative Commerce Header */}
+        <div className={classes.collaborative_header}>
+          <h3>🌟 Selamta Collaborative Marketplace</h3>
+          <p>Choose your interests after payment to get personalized discount links!</p>
         </div>
 
         {/* Delivery Address */}
@@ -229,66 +312,94 @@ function Payment() {
         <hr />
 
         {/* Payment Method */}
-        <div className={classes.flex}>
-          <h3>Payment Method</h3>
-          <div className={classes.payment__card__container}>
-            <div className={classes.payment__details}>
-              <form onSubmit={handlePayment}>
-                {/* Error Display */}
-                {cardError && (
-                  <div className={classes.cardError}>{cardError}</div>
-                )}
+        {!success && (
+          <div className={classes.flex}>
+            <h3>Payment Method</h3>
+            <div className={classes.payment__card__container}>
+              <div className={classes.payment__details}>
+                <form onSubmit={handlePayment}>
+                  {cardError && (
+                    <div className={classes.cardError}>{cardError}</div>
+                  )}
 
-                {/* Stripe Card Element */}
-                <div className={classes.card_element_container}>
-                  <label>Card Details</label>
-                  <CardElement
-                    onChange={handleChange}
-                    options={{
-                      style: {
-                        base: {
-                          fontSize: "16px",
-                          color: "#424770",
-                          "::placeholder": {
-                            color: "#aab7c4",
+                  <div className={classes.card_element_container}>
+                    <label>Card Details</label>
+                    <CardElement
+                      onChange={handleChange}
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: "16px",
+                            color: "#424770",
+                            "::placeholder": {
+                              color: "#aab7c4",
+                            },
                           },
-                          padding: "10px 12px",
                         },
-                      },
-                    }}
-                  />
-                </div>
-
-                {/* Price and Button */}
-                <div className={classes.payment__price}>
-                  <div>
-                    <span style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                      <p>Total Order |</p>
-                      <CurrencyFormat amount={total} />
-                    </span>
+                      }}
+                    />
                   </div>
-                  <button
-                    type="submit"
-                    disabled={!stripe || !clientSecret || processing || cardError || success}
-                    className={classes.payment__button}
-                  >
-                    {!clientSecret
-                      ? "Loading Payment..."
-                      : processing
-                      ? "Processing..."
-                      : success
-                      ? "Payment Successful!"
-                      : `Pay ${numeral(total).format('$0,0.00')}`}
-                  </button>
-                </div>
-              </form>
+
+                  <div className={classes.payment__price}>
+                    <div>
+                      <span style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        <p>Total Order |</p>
+                        <CurrencyFormat amount={total} />
+                      </span>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!stripe || !clientSecret || processing || cardError || success}
+                      className={classes.payment__button}
+                    >
+                      {!clientSecret
+                        ? "Loading Payment..."
+                        : processing
+                        ? "Processing..."
+                        : success
+                        ? "Payment Successful!"
+                        : `Pay ${numeral(total).format('$0,0.00')}`}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
+        {/* Success Flow */}
         {success && (
-          <div className={classes.success}>
-            ✅ Real Stripe Payment Successful! Redirecting to orders...
+          <div className={classes.success_flow}>
+            {showInterestSelection && !personalizedPartners.length && (
+              <InterestSelection />
+            )}
+            
+            {personalizedPartners.length > 0 && (
+              <PersonalizedPartners />
+            )}
+            
+            {!showInterestSelection && !personalizedPartners.length && (
+              <div className={classes.payment_success}>
+                <h3>✅ Payment Successful!</h3>
+                <p>Preparing your personalized offers...</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Interest Preview */}
+        {!success && interestCategories.length > 0 && (
+          <div className={classes.interest_preview}>
+            <h4>🎯 Personalized Discounts</h4>
+            <p>After payment, choose your interests to get customized discount links from Ethiopian women entrepreneurs!</p>
+            <div className={classes.preview_interests}>
+              {interestCategories.slice(0, 3).map(category => (
+                <span key={category.id} className={classes.preview_interest}>
+                  {category.icon} {category.name.split(' ')[0]}
+                </span>
+              ))}
+              <span className={classes.preview_more}>+{interestCategories.length - 3} more</span>
+            </div>
           </div>
         )}
       </section>

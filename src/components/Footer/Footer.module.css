@@ -1,0 +1,270 @@
+.footer {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #ffffff;
+    margin-top: auto;
+  }
+  
+  .footer_container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 1rem; /* Drastically reduced padding */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Smaller minmax */
+    gap: 1.5rem; /* Reduced gap */
+    font-size: 0.8rem; /* Smaller base font size */
+  }
+  
+  /* Brand Section - More Compact */
+  .brand {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* Much smaller gap */
+  }
+  
+  .logo {
+    font-size: 1.2rem; /* Much smaller logo */
+    font-weight: 700;
+    background: linear-gradient(135deg, #eabc66 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+  }
+  
+  .tagline {
+    color: #b8b8b8;
+    line-height: 1.3;
+    margin: 0;
+    font-size: 0.75rem; /* Much smaller font */
+  }
+  
+  .social_links {
+    display: flex;
+    gap: 0.5rem; /* Reduced gap */
+  }
+  
+  .social_link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; /* Much smaller icons */
+    height: 28px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: #ffffff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    font-size: 0.7rem; /* Much smaller icons */
+  }
+  
+  .social_link:hover {
+    background: #d2af3c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 212, 79, 0.3);
+  }
+  
+  /* Section Titles */
+  .section_title {
+    font-size: 0.9rem; /* Smaller title */
+    font-weight: 600;
+    margin-bottom: 0.7rem; /* Reduced margin */
+    color: #ffffff;
+  }
+  
+  /* Remove the underline to save space */
+  .section_title::after {
+    display: none;
+  }
+  
+  /* Footer Links - More Compact */
+  .footer_links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem; /* Much smaller gap */
+  }
+  
+  .footer_links a {
+    color: #b8b8b8;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 0.75rem; /* Much smaller font */
+  }
+  
+  .footer_links a:hover {
+    color: #fcc947;
+  }
+  
+  /* Remove the hover animation to save space */
+  .footer_links a::before {
+    display: none;
+  }
+  
+  /* Contact Info - More Compact */
+  .contact_info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* Much smaller gap */
+    margin-bottom: 1rem; /* Reduced margin */
+  }
+  
+  .contact_item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem; /* Much smaller gap */
+    color: #b8b8b8;
+    font-size: 0.75rem; /* Much smaller font */
+  }
+  
+  .contact_icon {
+    color: #fcc947;
+    font-size: 0.8rem; /* Smaller icons */
+  }
+  
+  /* Newsletter - More Compact */
+  .newsletter {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.8rem; /* Much smaller padding */
+    border-radius: 6px; /* Smaller radius */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .newsletter_title {
+    font-size: 0.8rem; /* Smaller title */
+    font-weight: 600;
+    margin-bottom: 0.5rem; /* Reduced margin */
+    color: #ffffff;
+  }
+  
+  .newsletter_form {
+    display: flex;
+    gap: 0.3rem;
+  }
+  
+  .newsletter_input {
+    flex: 1;
+    padding: 0.4rem 0.6rem; /* Much smaller padding */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px; /* Smaller radius */
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 0.7rem; /* Much smaller font */
+    transition: all 0.3s ease;
+  }
+  
+  .newsletter_input::placeholder {
+    color: #b8b8b8;
+    font-size: 0.7rem;
+  }
+  
+  .newsletter_input:focus {
+    outline: none;
+    border-color: #fcc947;
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  .newsletter_button {
+    padding: 0.4rem 0.8rem; /* Much smaller padding */
+    background: linear-gradient(135deg, #eabc66 0%, #d2af3c 100%);
+    color: white;
+    border: none;
+    border-radius: 4px; /* Smaller radius */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    font-size: 0.7rem; /* Much smaller font */
+  }
+  
+  .newsletter_button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(246, 204, 88, 0.3);
+  }
+  
+  /* Footer Bottom - More Compact */
+  .footer_bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.7rem 1rem; /* Much smaller padding */
+    background: rgba(0, 0, 0, 0.2);
+  }
+  
+  .footer_bottom_container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .copyright {
+    color: #b8b8b8;
+    font-size: 0.7rem; /* Much smaller font */
+  }
+  
+  .legal_links {
+    display: flex;
+    gap: 1rem; /* Reduced gap */
+  }
+  
+  .legal_links a {
+    color: #b8b8b8;
+    text-decoration: none;
+    font-size: 0.7rem; /* Much smaller font */
+    transition: color 0.3s ease;
+  }
+  
+  .legal_links a:hover {
+    color: #fcc947;
+  }
+  
+  /* Responsive Design - More Compact */
+  @media (max-width: 768px) {
+    .footer_container {
+      grid-template-columns: 1fr;
+      gap: 1rem; /* Reduced gap */
+      padding: 1rem 1rem 0.5rem; /* Much smaller padding */
+    }
+  
+    .footer_bottom_container {
+      flex-direction: column;
+      text-align: center;
+      gap: 0.5rem; /* Reduced gap */
+    }
+  
+    .legal_links {
+      gap: 0.8rem; /* Reduced gap */
+    }
+  
+    .newsletter_form {
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+  
+    .social_links {
+      justify-content: center;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .footer_container {
+      padding: 0.8rem 0.8rem 0.4rem; /* Even smaller padding */
+    }
+  
+    .logo {
+      font-size: 1rem; /* Smaller logo */
+    }
+  
+    .section_title {
+      font-size: 0.8rem; /* Smaller title */
+    }
+  
+    .footer_bottom {
+      padding: 0.5rem 0.8rem; /* Smaller padding */
+    }
+  }

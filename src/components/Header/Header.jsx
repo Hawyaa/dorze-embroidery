@@ -21,6 +21,18 @@ const Header = () => {
     }
   };
 
+  // ADD THIS: Handle sign out with redirect
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      console.log("User signed out successfully");
+      // Redirect to landing page after sign out
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
   return (
     <header className={classes.header__container}>
       {/* Logo & Location */}
@@ -29,21 +41,22 @@ const Header = () => {
           Dorze Embroidery
         </Link>
         <div className={classes.delivery}>
-          <span><SlLocationPin /></span>
-          <div>
-            <p>Deliver to</p>
-            <span>Ethiopia</span>
-          </div>
+          
+          
         </div>
       </div>
 
-      {/* Search */}
-      <div className={classes.search__container}>
-        <input type="text" placeholder="Search..." className={classes.search_input} />
-        <button className={classes.search_button}>
-          <BsSearch size={14} />
-        </button>
-      </div>
+      {/* Navigation Links */}
+      <nav className={classes.navigation}>
+        <Link to="/" className={classes.nav_link}>Home</Link>
+        <Link to="/about" className={classes.nav_link}>About</Link>
+        <Link to="/services" className={classes.nav_link}>Services</Link>
+        <Link to="/artisans" className={classes.nav_link}>Artisans</Link>
+        <Link to="/contact" className={classes.nav_link}>Contact</Link>
+      </nav>
+
+      
+      
 
       {/* Account / Orders / Cart */}
       <div className={classes.order__container}>
@@ -52,7 +65,8 @@ const Header = () => {
             {user ? (
               <>
                 <p>Hello {user?.email?.split("@")[0]}</p>
-                <span onClick={() => auth.signOut()}>Sign Out</span>
+                {/* CHANGE: Use handleSignOut instead of inline function */}
+                <span onClick={handleSignOut}>Sign Out</span>
               </>
             ) : (
               <>

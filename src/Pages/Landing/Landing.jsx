@@ -10,6 +10,7 @@ function Landing() {
             <Carousel/>
             <Category/>
             <Product/>
+            
         </Layout>
     )
 }
